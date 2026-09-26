@@ -1,4 +1,4 @@
-const MAX_SOURCE_CHARACTERS = 10_000;
+const MAX_SOURCE_CHARACTERS = 5_000;
 
 export type Chapter = { number: number; title: string; startPage: number; endPage: number };
 export type Page = { number: number; text: string; chapter: number | null };
@@ -57,11 +57,11 @@ export function acceptFacts(rawFacts: Array<Omit<Fact, "id">>, unit: SourcePage[
         throw new Error("Sarvam did not return a facts array.");
     const facts: Fact[] = [];
     for (const raw of rawFacts) {
-        const source = unit.find(
+        const statedPage = unit.find(
             (page) => page.page === raw.page && page.chapter === raw.chapter,
         );
         if (
-            !source ||
+            !statedPage ||
             typeof raw.quote !== "string" ||
             typeof raw.hindi !== "string"
         ) {
@@ -70,10 +70,13 @@ export function acceptFacts(rawFacts: Array<Omit<Fact, "id">>, unit: SourcePage[
             );
         }
         const quote = normaliseQuote(raw.quote);
-        if (quote.length < 6 || !normaliseQuote(source.text).includes(quote)) {
-            throw new Error(
-                `Sarvam returned an unverified quote for PDF page ${raw.page}.`,
-            );
+        const matchingPages = unit.filter(
+            (page) => page.chapter === raw.chapter && normaliseQuote(page.text).includes(quote),
+        );
+        const source = matchingPages.find((page) => page.page === raw.page)
+            ?? (matchingPages.length === 1 ? matchingPages[0] : undefined);
+        if (quote.length < 6 || !source) {
+            continue;
         }
         if (!/[\u0900-\u097f]/u.test(raw.hindi)) {
             throw new Error(
@@ -83,7 +86,7 @@ export function acceptFacts(rawFacts: Array<Omit<Fact, "id">>, unit: SourcePage[
         facts.push({
             id: `F${String(nextId + facts.length).padStart(4, "0")}`,
             chapter: raw.chapter,
-            page: raw.page,
+            page: source.page,
             quote: raw.quote.trim(),
             hindi: raw.hindi.trim(),
         });

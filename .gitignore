@@ -2,3 +2,8 @@ node_modules/
 *.mp3
 *.wav
 .env
+kundli-preview.txt
+kundli-sample.txt
+kundli-hindi.txt
+*.mp3.work/
+*.log

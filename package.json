@@ -6,7 +6,7 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "start": "tsx src/cli.ts",
+    "start": "node --env-file-if-exists=.env --import tsx src/cli.ts",
     "test": "tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
